@@ -62,7 +62,7 @@
       }
 
       function loadVoices() {
-        if (!'speechSynthesis' in window) {
+        if (!window.speechSynthesis) {
           warnNoSpeechSynthesisSupport();
           return;
         }
@@ -83,12 +83,12 @@
       }
 
       loadVoices();
-      if ('speechSynthesis' in window) {
+      if (window.speechSynthesis) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
       }
 
       function speak(message) {
-        if (!'speechSynthesis' in window) {
+        if (!window.speechSynthesis) {
           warnNoSpeechSynthesisSupport();
           return;
         }
