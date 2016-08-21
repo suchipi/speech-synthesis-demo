@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Speech Synthesis API Demo</title>
+    <style>
+      .form-input {
+        display: inline-block;
+      }
+      #settings-bar {
+        margin-bottom: 0.5em;
+      }
+      #speechInput {
+        min-height: 400px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="settings-bar">
+      <select name="voice">
+        <option>Loading voices...</option>
+      </select>
+      <span class="form-input">
+        <label for="volumeInput">Volume</label>
+        <input id="volumeInput" type="range" min="0" max="1" value="1" step="0.05" />
+      </span>
+      <span class="form-input">
+        <label for="rateInput">Rate</label>
+        <input id="rateInput" type="range" min="0.1" max="10" value="1" step="0.1" />
+      </span>
+      <span class="form-input">
+        <label for="pitchInput">Pitch</label>
+        <input id="pitchInput" type="range" min="0" max="2" value="1" step="0.1" />
+      </span>
+      <span class="form-input">
+        <label for="shouldClearOnEnterCheckbox">Clear Text Input On Enter?</label>
+        <input id="shouldClearOnEnterCheckbox" type="checkbox" checked />
+      </span>
+      <span class="form-input">
+        <button id="resetToDefaultsButton">Reset to Defaults</button>
+      </span>
+    </div>
+    <textarea id="speechInput" placeholder="Type something here, then press 'Enter'..."></textarea>
+    <script>
+      "use strict";
+
+      var voices = [];
+      var selectedVoiceIndex = 0;
+      var voiceMatchingNavigatorLanguageIndex = 0;
+
+      var selectVoice = document.querySelector("select[name='voice']");
+      var speechInput = document.getElementById("speechInput");
+      var volumeInput = document.getElementById("volumeInput");
+      var rateInput = document.getElementById("rateInput");
+      var pitchInput = document.getElementById("pitchInput");
+      var shouldClearOnEnterCheckbox = document.getElementById("shouldClearOnEnterCheckbox");
+      var resetToDefaultsButton = document.getElementById("resetToDefaultsButton");
+
+      function warnNoSpeechSynthesisSupport() {
+        alert("Your browser does not support speech synthesis. Try using the latest Chrome or Firefox.");
+      }
+
+      function loadVoices() {
+        if (!'speechSynthesis' in window) {
+          warnNoSpeechSynthesisSupport();
+          return;
+        }
+
+        selectVoice.innerHTML = "";
+        voices = window.speechSynthesis.getVoices();
+        voices.forEach(function(voice, index) {
+          var option = document.createElement('option');
+          option.value = voice.name;
+          option.textContent = voice.name;
+          if (voice.lang == navigator.language) {
+            voiceMatchingNavigatorLanguageIndex = index;
+          };
+          selectVoice.appendChild(option);
+        });
+        selectedVoiceIndex = voiceMatchingNavigatorLanguageIndex;
+        selectVoice.selectedIndex = selectedVoiceIndex;
+      }
+
+      loadVoices();
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+
+      function speak(message) {
+        if (!'speechSynthesis' in window) {
+          warnNoSpeechSynthesisSupport();
+          return;
+        }
+        var utterance = new SpeechSynthesisUtterance(message);
+        utterance.voice = voices[selectedVoiceIndex];
+        utterance.volume = volumeInput.value;
+        utterance.rate = rateInput.value;
+        utterance.pitch = pitchInput.value;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      selectVoice.addEventListener("change", function(event) {
+        selectedVoiceIndex = selectVoice.selectedIndex;
+      });
+
+      speechInput.addEventListener("keydown", function(event) {
+        if (event.keyCode == 13) { // enter
+          speak(speechInput.value);
+          if (shouldClearOnEnterCheckbox.checked) {
+            speechInput.value = "";
+          }
+          event.preventDefault();
+        }
+      });
+
+      resetToDefaultsButton.addEventListener("click", function(event) {
+        volumeInput.value = 1;
+        rateInput.value = 1;
+        pitchInput.value = 1;
+        shouldClearOnEnterCheckbox.checked = true;
+        selectedVoiceIndex = voiceMatchingNavigatorLanguageIndex;
+        selectVoice.selectedIndex = selectedVoiceIndex;
+      });
+    </script>
+  </body>
+</html>
